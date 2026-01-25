@@ -48,6 +48,26 @@ app.use('/api/projetos', projetoRoutes);
 const metaRoutes = require('./routes/metaRoutes');
 app.use('/api/metas', metaRoutes);
 
+// Rota raiz
+app.get('/', (req, res) => {
+  res.json({
+    message: 'SIKU Backend API',
+    version: '1.0.0',
+    status: 'running',
+    environment: process.env.NODE_ENV || 'development',
+    endpoints: {
+      auth: '/api/auth',
+      atividades: '/api/atividades',
+      habitos: '/api/habitos',
+      areas: '/api/areas',
+      categorias: '/api/categorias',
+      projetos: '/api/projetos',
+      metas: '/api/metas',
+      health: '/ping'
+    }
+  });
+});
+
 // Health check
 app.get('/ping', (req, res) => res.json({ ok: true, env: process.env.NODE_ENV || 'undefined' }));
 
