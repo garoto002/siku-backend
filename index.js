@@ -51,7 +51,13 @@ app.use('/api/metas', metaRoutes);
 // Health check
 app.get('/ping', (req, res) => res.json({ ok: true, env: process.env.NODE_ENV || 'undefined' }));
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Servidor rodando na porta ${PORT} (bind: 0.0.0.0)`);
-  console.log(`NODE_ENV=${process.env.NODE_ENV || 'undefined'}`);
-});
+// Para desenvolvimento local
+if (require.main === module) {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Servidor rodando na porta ${PORT} (bind: 0.0.0.0)`);
+    console.log(`NODE_ENV=${process.env.NODE_ENV || 'undefined'}`);
+  });
+}
+
+// Export para Vercel (serverless)
+module.exports = app;
