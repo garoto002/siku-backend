@@ -1,3 +1,12 @@
 {
-  "expo": {}
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "a1686e8c-0e9e-4585-b166-d6853a3f645a"
+      }
+    },
+    "android": {
+      "package": "com.garoto02.backend"
+    }
+  }
 }
