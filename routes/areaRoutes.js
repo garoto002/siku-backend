@@ -4,7 +4,10 @@ const {
   listarAreas,
   criarArea,
   atualizarArea,
-  excluirArea
+  excluirArea,
+  contarVinculosArea,
+  listarVinculosArea,
+  reassignArea
 } = require('../controllers/areaController');
 
 const { protegerRota } = require('../middleware/authMiddleware');
@@ -17,7 +20,14 @@ router.route('/')
   .post(criarArea);
 
 router.route('/:id')
+  .get(contarVinculosArea)
   .put(atualizarArea)
   .delete(excluirArea);
+
+// listar lançamentos vinculados (gastos + entradas)
+router.get('/:id/lancamentos', listarVinculosArea);
+
+// Reatribuir lançamentos desta área para outra
+router.post('/:id/reassign', reassignArea);
 
 module.exports = router;

@@ -41,7 +41,7 @@ const registrarUsuario = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: 'Usuário registrado com sucesso! Bem-vindo ao FinanceApp!',
+      message: 'Usuário registado com sucesso! Bem-vindo ao Siku!',
       data: {
         usuario,
         token,
@@ -113,28 +113,35 @@ const registrarUsuario = async (req, res) => {
     }
   };
 
-  // Obter perfil do usuário autenticado
-  const obterPerfil = async (req, res) => {
-    try {
-      const usuario = await User.findById(req.usuario.id);
-      if (!usuario) {
-        return res.status(404).json({
-          success: false,
-          message: 'Usuário não encontrado'
-        });
-      }
-      return res.status(200).json({
-        success: true,
-        usuario: usuario.toJSON()
-      });
-    } catch (error) {
-      return res.status(500).json({
-        success: false,
-        message: 'Erro ao obter perfil',
-        error: error.message
-      });
+
+// Atualizar perfil do usuário autenticado
+const atualizarPerfil = async (req, res) => {
+  try {
+    const usuario = await User.findById(req.usuario.id).select('+senha');
+    if (!usuario) {
+      return res.status(404).json({ success: false, message: 'Usuário não encontrado' });
     }
-  };
+
+    const { nome, email, senhaAtual, novaSenha } = req.body;
+    if (nome) usuario.nome = nome;
+    if (email) usuario.email = email;
+    if (novaSenha) {
+      // Verifica senha atual antes de trocar
+      if (!senhaAtual) {
+        return res.status(400).json({ success: false, message: 'Informe a senha atual para alterar.' });
+      }
+      const senhaCorreta = await usuario.verificarSenha(senhaAtual);
+      if (!senhaCorreta) {
+        return res.status(401).json({ success: false, message: 'Senha atual incorreta.' });
+      }
+      usuario.senha = novaSenha;
+    }
+    await usuario.save();
+    return res.status(200).json({ success: true, usuario: usuario.toJSON(), message: 'Perfil atualizado com sucesso!' });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Erro ao atualizar perfil', error: error.message });
+  }
+};
 
   // Teste de conexão
   const testeConexao = (req, res) => {
@@ -147,6 +154,6 @@ const registrarUsuario = async (req, res) => {
   module.exports = {
     registrarUsuario,
     loginUsuario,
-    obterPerfil,
-    testeConexao
+    testeConexao,
+    atualizarPerfil
   };

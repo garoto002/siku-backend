@@ -4,6 +4,7 @@ const { protegerRota } = require('../middleware/authMiddleware');
 const metaController = require('../controllers/metaController');
 
 router.get('/', protegerRota, metaController.listarMetas);
+router.get('/:id', protegerRota, metaController.obterMeta);
 router.post('/', protegerRota, metaController.criarMeta);
 router.put('/:id', protegerRota, metaController.atualizarMeta);
 router.delete('/:id', protegerRota, metaController.excluirMeta);

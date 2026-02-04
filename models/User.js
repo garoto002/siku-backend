@@ -35,6 +35,25 @@ const userSchema = new mongoose.Schema({
   dataRegistro: {
     type: Date,
     default: Date.now
+  },
+  // Push notifications token (Expo Push Token)
+  expoPushToken: {
+    type: String,
+    default: ''
+  },
+  // Configurações de alertas do usuário
+  alertsSettings: {
+    enabled: { type: Boolean, default: true },
+    periodDays: { type: Number, default: 30 },
+    increaseThreshold: { type: Number, default: 30 },
+    absoluteMin: { type: Number, default: 100 },
+    types: {
+      spending_increase: { type: Boolean, default: true },
+      large_transaction: { type: Boolean, default: true },
+      recurring_expense: { type: Boolean, default: true },
+      goal_reminder: { type: Boolean, default: true },
+      anomalies: { type: Boolean, default: false }
+    }
   }
 }, {
   timestamps: true

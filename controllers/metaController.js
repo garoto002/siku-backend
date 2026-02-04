@@ -10,6 +10,18 @@ exports.listarMetas = async (req, res) => {
   }
 };
 
+// Obter uma meta específica
+exports.obterMeta = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const meta = await Meta.findOne({ _id: id, usuario: req.usuario.id });
+    if (!meta) return res.status(404).json({ success: false, message: 'Meta não encontrada' });
+    res.status(200).json({ success: true, data: meta });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Erro ao obter meta', error: error.message });
+  }
+};
+
 // Criar nova meta
 exports.criarMeta = async (req, res) => {
   try {

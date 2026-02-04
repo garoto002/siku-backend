@@ -1,0 +1,47 @@
+const mongoose = require('mongoose');
+
+const entradaSchema = new mongoose.Schema({
+  titulo: {
+    type: String,
+    required: [true, 'Título é obrigatório'],
+    trim: true,
+    maxlength: [100, 'Título deve ter no máximo 100 caracteres']
+  },
+  descricao: {
+    type: String,
+    trim: true,
+    maxlength: [500, 'Descrição deve ter no máximo 500 caracteres']
+  },
+  data: {
+    type: Date,
+    required: [true, 'Data é obrigatória']
+  },
+  status: {
+    type: String,
+    enum: ['pendente', 'em_andamento', 'concluida', 'cancelada'],
+    default: 'pendente'
+  },
+  area: {
+    type: String,
+    trim: true,
+    required: [true, 'Área é obrigatória']
+  },
+  categoria: {
+    type: String,
+    trim: true,
+    required: [true, 'Categoria é obrigatória']
+  },
+  valor: {
+    type: Number,
+    required: [true, 'Valor é obrigatório']
+  },
+  usuario: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  }
+}, { timestamps: true });
+
+entradaSchema.index({ usuario: 1, data: 1 });
+
+module.exports = mongoose.model('Entrada', entradaSchema);

@@ -1,5 +1,7 @@
 const Categoria = require('../models/Categoria');
 const Area = require('../models/Area');
+const Gasto = require('../models/Gasto');
+const Entrada = require('../models/Entrada');
 
 // @desc    Listar todas as categorias de uma área
 // @route   GET /api/categorias?area=:areaId
@@ -157,6 +159,28 @@ const atualizarCategoria = async (req, res) => {
   }
 };
 
+// @desc    Contar lançamentos vinculados a uma categoria
+// @route   GET /api/categorias/:id/vinculos
+// @access  Private
+const contarVinculosCategoria = async (req, res) => {
+  try {
+    const categoriaId = req.params.id;
+
+    const categoria = await Categoria.findOne({ _id: categoriaId, usuario: req.usuario.id });
+    if (!categoria) {
+      return res.status(404).json({ success: false, message: 'Categoria não encontrada' });
+    }
+
+    const gastos = await Gasto.countDocuments({ categoria: categoriaId, usuario: req.usuario.id });
+    const entradas = await Entrada.countDocuments({ categoria: categoriaId, usuario: req.usuario.id });
+
+    return res.status(200).json({ success: true, data: { gastos, entradas }, total: gastos + entradas });
+  } catch (error) {
+    console.error('Erro ao contar vínculos da categoria:', error);
+    return res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+  }
+};
+
 // @desc    Excluir uma categoria
 // @route   DELETE /api/categorias/:id
 // @access  Private
@@ -164,10 +188,7 @@ const excluirCategoria = async (req, res) => {
   try {
     const categoriaId = req.params.id;
 
-    const categoria = await Categoria.findOneAndDelete({
-      _id: categoriaId,
-      usuario: req.usuario.id
-    });
+    const categoria = await Categoria.findOne({ _id: categoriaId, usuario: req.usuario.id });
 
     if (!categoria) {
       return res.status(404).json({
@@ -175,6 +196,20 @@ const excluirCategoria = async (req, res) => {
         message: 'Categoria não encontrada'
       });
     }
+
+    // Contar lançamentos vinculados
+    const gastos = await Gasto.countDocuments({ categoria: categoriaId, usuario: req.usuario.id });
+    const entradas = await Entrada.countDocuments({ categoria: categoriaId, usuario: req.usuario.id });
+
+    if (gastos + entradas > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Não é possível excluir categoria com lançamentos vinculados',
+        linked: { gastos, entradas }
+      });
+    }
+
+    await categoria.remove();
 
     res.status(200).json({
       success: true,
@@ -189,9 +224,89 @@ const excluirCategoria = async (req, res) => {
   }
 };
 
+// @desc    Listar lançamentos vinculados a uma categoria (gastos + entradas)
+// @route   GET /api/categorias/:id/lancamentos
+// @access  Private
+const listarVinculosCategoria = async (req, res) => {
+  try {
+    const categoriaId = req.params.id;
+
+    const categoria = await Categoria.findOne({ _id: categoriaId, usuario: req.usuario.id });
+    if (!categoria) return res.status(404).json({ success: false, message: 'Categoria não encontrada' });
+
+    const { start, end, minValor, maxValor, limit = 50, skip = 0 } = req.query;
+    const baseFilter = { categoria: categoriaId, usuario: req.usuario.id };
+
+    const makeFilter = () => {
+      const f = { ...baseFilter };
+      if (start) {
+        const s = new Date(start);
+        s.setHours(0,0,0,0);
+        f.data = { ...(f.data || {}), $gte: s };
+      }
+      if (end) {
+        const e = new Date(end);
+        e.setHours(23,59,59,999);
+        f.data = { ...(f.data || {}), $lte: e };
+      }
+      if (minValor) f.valor = { ...(f.valor || {}), $gte: Number(minValor) };
+      if (maxValor) f.valor = { ...(f.valor || {}), $lte: Number(maxValor) };
+      return f;
+    };
+
+    const gastos = await Gasto.find(makeFilter()).sort({ data: -1 }).skip(Number(skip)).limit(Number(limit));
+    const entradas = await Entrada.find(makeFilter()).sort({ data: -1 }).skip(Number(skip)).limit(Number(limit));
+
+    const gastosCount = await Gasto.countDocuments({ categoria: categoriaId, usuario: req.usuario.id });
+    const entradasCount = await Entrada.countDocuments({ categoria: categoriaId, usuario: req.usuario.id });
+
+    return res.status(200).json({ success: true, data: { gastos, entradas, counts: { gastos: gastosCount, entradas: entradasCount } } });
+  } catch (error) {
+    console.error('Erro ao listar vínculos da categoria:', error);
+    return res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+  }
+};
+
+// @desc    Reatribuir lançamentos de uma categoria para outra (bulk update)
+// @route   POST /api/categorias/:id/reassign
+// @access  Private
+const reassignCategoria = async (req, res) => {
+  try {
+    const fromId = req.params.id;
+    const { toCategoriaId, scope = 'both' } = req.body;
+
+    if (!toCategoriaId) return res.status(400).json({ success: false, message: 'toCategoriaId é obrigatório' });
+
+    const from = await Categoria.findOne({ _id: fromId, usuario: req.usuario.id });
+    const to = await Categoria.findOne({ _id: toCategoriaId, usuario: req.usuario.id });
+
+    if (!from || !to) return res.status(404).json({ success: false, message: 'Categoria origem ou destino não encontrada' });
+
+    const result = { gastos: 0, entradas: 0 };
+
+    if (scope === 'gastos' || scope === 'both') {
+      const r = await Gasto.updateMany({ categoria: fromId, usuario: req.usuario.id }, { $set: { categoria: toCategoriaId } });
+      result.gastos = (r && (r.modifiedCount ?? r.nModified ?? r.modified)) || 0;
+    }
+
+    if (scope === 'entradas' || scope === 'both') {
+      const r2 = await Entrada.updateMany({ categoria: fromId, usuario: req.usuario.id }, { $set: { categoria: toCategoriaId } });
+      result.entradas = (r2 && (r2.modifiedCount ?? r2.nModified ?? r2.modified)) || 0;
+    }
+
+    return res.status(200).json({ success: true, message: 'Reatribuição concluída', result });
+  } catch (error) {
+    console.error('Erro ao reatribuir categoria:', error);
+    return res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+  }
+};
+
 module.exports = {
   listarCategorias,
   criarCategoria,
   atualizarCategoria,
-  excluirCategoria
+  excluirCategoria,
+  contarVinculosCategoria,
+  listarVinculosCategoria,
+  reassignCategoria
 };

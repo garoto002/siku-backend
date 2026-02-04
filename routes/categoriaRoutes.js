@@ -4,7 +4,10 @@ const {
   listarCategorias,
   criarCategoria,
   atualizarCategoria,
-  excluirCategoria
+  excluirCategoria,
+  contarVinculosCategoria,
+  listarVinculosCategoria,
+  reassignCategoria
 } = require('../controllers/categoriaController');
 
 const { protegerRota } = require('../middleware/authMiddleware');
@@ -17,7 +20,14 @@ router.route('/')
   .post(criarCategoria);
 
 router.route('/:id')
+  .get(contarVinculosCategoria)
   .put(atualizarCategoria)
   .delete(excluirCategoria);
+
+// listar lançamentos vinculados (gastos + entradas)
+router.get('/:id/lancamentos', listarVinculosCategoria);
+
+// Reatribuir lançamentos desta categoria para outra
+router.post('/:id/reassign', reassignCategoria);
 
 module.exports = router;

@@ -1,12 +1,14 @@
-const Habito = require('../models/Habito');
+// NOTA: Este controller agora usa o modelo Gasto para manter compatibilidade
+// com apps antigos que ainda chamam /api/habitos
+const Gasto = require('../models/Gasto');
 
 const listarHabitos = async (req, res) => {
   try {
-    console.log('🔎 [Habito] Listando hábitos para usuário:', req.usuario?._id || req.usuario?.id || 'não autenticado');
+    console.log('🔎 [Habito->Gasto] Listando gastos para usuário:', req.usuario?._id || req.usuario?.id || 'não autenticado');
     const usuarioId = req.usuario.id || (req.usuario._id && req.usuario._id.toString());
 
     if (!usuarioId) {
-      console.log('❌ [Habito] Usuário não autenticado ao listar hábitos');
+      console.log('❌ [Habito->Gasto] Usuário não autenticado');
       return res.status(401).json({ success: false, message: 'Usuário não autenticado' });
     }
 
@@ -28,49 +30,52 @@ const listarHabitos = async (req, res) => {
       }
     }
 
-    const habitos = await Habito.find(filtro).sort({ data: 1 });
-    res.json({ success: true, habitos });
+    const gastos = await Gasto.find(filtro).sort({ data: 1 });
+    // Retorna como 'habitos' para compatibilidade com apps antigos
+    res.json({ success: true, habitos: gastos, gastos: gastos });
   } catch (error) {
-    console.error('❌ [Habito] Erro ao listar hábitos:', error);
-    res.status(500).json({ success: false, message: 'Erro ao listar hábitos', error });
+    console.error('❌ [Habito->Gasto] Erro ao listar:', error);
+    res.status(500).json({ success: false, message: 'Erro ao listar gastos', error });
   }
 };
 
 const criarHabito = async (req, res) => {
   try {
-    console.log('📥 [Habito] Dados recebidos para criar hábito:', req.body);
-    console.log('🔑 [Habito] Usuário autenticado:', req.usuario?._id || req.usuario?.id || 'não autenticado');
+    console.log('📥 [Habito->Gasto] Dados recebidos:', req.body);
+    console.log('🔑 [Habito->Gasto] Usuário:', req.usuario?._id || req.usuario?.id || 'não autenticado');
 
     const usuarioId = req.usuario.id || (req.usuario._id && req.usuario._id.toString());
 
     if (!usuarioId) {
-      console.log('❌ [Habito] Usuário não autenticado ao criar hábito');
+      console.log('❌ [Habito->Gasto] Usuário não autenticado');
       return res.status(401).json({ success: false, message: 'Usuário não autenticado' });
     }
 
-    // Validação dos novos campos obrigatórios
+    // Validação dos campos obrigatórios
     if (!req.body.area || !req.body.categoria || typeof req.body.valor === 'undefined') {
       return res.status(400).json({ success: false, message: 'Área, categoria e valor são obrigatórios' });
     }
-    const novoHabito = new Habito({ ...req.body, usuario: usuarioId });
-    await novoHabito.save();
-    console.log('✅ [Habito] Hábito salvo com sucesso:', novoHabito);
-    res.json({ success: true, habito: novoHabito });
+    
+    const novoGasto = new Gasto({ ...req.body, usuario: usuarioId });
+    await novoGasto.save();
+    console.log('✅ [Habito->Gasto] Gasto salvo com sucesso:', novoGasto);
+    // Retorna como 'habito' para compatibilidade com apps antigos
+    res.json({ success: true, habito: novoGasto, gasto: novoGasto });
   } catch (error) {
-    console.error('❌ [Habito] Erro ao criar hábito:', error);
-    res.status(400).json({ success: false, message: 'Erro ao criar hábito', error });
+    console.error('❌ [Habito->Gasto] Erro ao criar:', error);
+    res.status(400).json({ success: false, message: 'Erro ao criar gasto', error });
   }
 };
 
 const obterHabito = async (req, res) => {
   try {
     const usuarioId = req.usuario.id || (req.usuario._id && req.usuario._id.toString());
-    const habito = await Habito.findOne({ _id: req.params.id, usuario: usuarioId });
-    if (!habito) return res.status(404).json({ success: false, message: 'Hábito não encontrado' });
-    res.json({ success: true, data: habito });
+    const gasto = await Gasto.findOne({ _id: req.params.id, usuario: usuarioId });
+    if (!gasto) return res.status(404).json({ success: false, message: 'Gasto não encontrado' });
+    res.json({ success: true, data: gasto, habito: gasto, gasto: gasto });
   } catch (error) {
-    console.error('❌ [Habito] Erro ao obter hábito:', error);
-    res.status(500).json({ success: false, message: 'Erro ao obter hábito', error });
+    console.error('❌ [Habito->Gasto] Erro ao obter:', error);
+    res.status(500).json({ success: false, message: 'Erro ao obter gasto', error });
   }
 };
 
@@ -90,30 +95,30 @@ const atualizarHabito = async (req, res) => {
       valor: req.body.valor
     };
 
-    const habito = await Habito.findOneAndUpdate(
+    const gasto = await Gasto.findOneAndUpdate(
       { _id: req.params.id, usuario: usuarioId },
       updates,
       { new: true, runValidators: true }
     );
 
-    if (!habito) return res.status(404).json({ success: false, message: 'Hábito não encontrado' });
+    if (!gasto) return res.status(404).json({ success: false, message: 'Gasto não encontrado' });
 
-    res.json({ success: true, data: habito });
+    res.json({ success: true, data: gasto, habito: gasto, gasto: gasto });
   } catch (error) {
-    console.error('❌ [Habito] Erro ao atualizar hábito:', error);
-    res.status(400).json({ success: false, message: 'Erro ao atualizar hábito', error });
+    console.error('❌ [Habito->Gasto] Erro ao atualizar:', error);
+    res.status(400).json({ success: false, message: 'Erro ao atualizar gasto', error });
   }
 };
 
 const excluirHabito = async (req, res) => {
   try {
     const usuarioId = req.usuario.id || (req.usuario._id && req.usuario._id.toString());
-    const habito = await Habito.findOneAndDelete({ _id: req.params.id, usuario: usuarioId });
-    if (!habito) return res.status(404).json({ success: false, message: 'Hábito não encontrado' });
-    res.json({ success: true, message: 'Hábito excluído com sucesso' });
+    const gasto = await Gasto.findOneAndDelete({ _id: req.params.id, usuario: usuarioId });
+    if (!gasto) return res.status(404).json({ success: false, message: 'Gasto não encontrado' });
+    res.json({ success: true, message: 'Gasto excluído com sucesso' });
   } catch (error) {
-    console.error('❌ [Habito] Erro ao excluir hábito:', error);
-    res.status(500).json({ success: false, message: 'Erro ao excluir hábito', error });
+    console.error('❌ [Habito->Gasto] Erro ao excluir:', error);
+    res.status(500).json({ success: false, message: 'Erro ao excluir gasto', error });
   }
 };
 
