@@ -41,6 +41,15 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  // Reset de senha
+  resetPasswordToken: {
+    type: String,
+    default: null
+  },
+  resetPasswordExpires: {
+    type: Date,
+    default: null
+  },
   // Configurações de alertas do usuário
   alertsSettings: {
     enabled: { type: Boolean, default: true },

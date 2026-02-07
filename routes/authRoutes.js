@@ -35,6 +35,17 @@ router.post('/debug', (req, res) => {
 router.post('/register', registrarUsuario);
 router.post('/login', loginUsuario);
 
+// Rotas de recuperação de senha
+const { 
+  solicitarRecuperacaoSenha, 
+  verificarCodigoRecuperacao, 
+  redefinirSenha 
+} = require('../controllers/authController');
+
+router.post('/forgot-password', solicitarRecuperacaoSenha);
+router.post('/verify-reset-code', verificarCodigoRecuperacao);
+router.post('/reset-password', redefinirSenha);
+
 // Rotas protegidas
 router.put('/perfil', protegerRota, require('../controllers/authController').atualizarPerfil);
 
