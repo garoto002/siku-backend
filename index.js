@@ -10,6 +10,8 @@ const {
 const { isProduction, devLog } = require('./utils/helpers');
 
 const app = express();
+// Confia no proxy do Vercel para identificar IPs corretamente
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
 
 // Conectar ao banco de dados
@@ -27,6 +29,7 @@ app.use(express.json({ limit: '10mb' }));
 
 // Log global para requisições (apenas em desenvolvimento)
 app.use((req, res, next) => {
+  console.log(`🌐 ${req.method} ${req.url} - Body:`, JSON.stringify(req.body, null, 2));
   devLog('🌐 Nova requisição:', req.method, req.url);
   next();
 });

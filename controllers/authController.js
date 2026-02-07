@@ -72,6 +72,8 @@ const registrarUsuario = async (req, res) => {
 
   // Login de usuário
   const loginUsuario = async (req, res) => {
+      // Log detalhado do body recebido para debug
+      console.log('🔍 [LOGIN] Body recebido:', JSON.stringify(req.body));
     try {
       const { email, password: senha } = req.body;
 

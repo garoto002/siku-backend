@@ -188,8 +188,10 @@ const validateDateQuery = [
  * Middleware para verificar erros de validação
  */
 const handleValidation = (req, res, next) => {
+  console.log('🔍 VALIDAÇÃO - Body recebido:', JSON.stringify(req.body, null, 2));
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    console.log('❌ ERROS DE VALIDAÇÃO:', JSON.stringify(errors.array(), null, 2));
     return res.status(400).json({
       success: false,
       message: 'Dados inválidos',
@@ -199,6 +201,7 @@ const handleValidation = (req, res, next) => {
       }))
     });
   }
+  console.log('✅ Validação passou');
   next();
 };
 
