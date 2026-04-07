@@ -64,10 +64,14 @@ const aiLimiter = rateLimit({
 const validateGasto = [
   body('area')
     .notEmpty().withMessage('Área é obrigatória')
-    .isMongoId().withMessage('Área inválida'),
+    .isString().withMessage('Área inválida')
+    .trim()
+    .isLength({ min: 1, max: 100 }).withMessage('Área deve ter entre 1 e 100 caracteres'),
   body('categoria')
     .notEmpty().withMessage('Categoria é obrigatória')
-    .isMongoId().withMessage('Categoria inválida'),
+    .isString().withMessage('Categoria inválida')
+    .trim()
+    .isLength({ min: 1, max: 100 }).withMessage('Categoria deve ter entre 1 e 100 caracteres'),
   body('valor')
     .notEmpty().withMessage('Valor é obrigatório')
     .isNumeric().withMessage('Valor deve ser numérico')
@@ -87,10 +91,14 @@ const validateGasto = [
 const validateEntrada = [
   body('area')
     .notEmpty().withMessage('Área é obrigatória')
-    .isMongoId().withMessage('Área inválida'),
+    .isString().withMessage('Área inválida')
+    .trim()
+    .isLength({ min: 1, max: 100 }).withMessage('Área deve ter entre 1 e 100 caracteres'),
   body('categoria')
     .notEmpty().withMessage('Categoria é obrigatória')
-    .isMongoId().withMessage('Categoria inválida'),
+    .isString().withMessage('Categoria inválida')
+    .trim()
+    .isLength({ min: 1, max: 100 }).withMessage('Categoria deve ter entre 1 e 100 caracteres'),
   body('valor')
     .notEmpty().withMessage('Valor é obrigatório')
     .isNumeric().withMessage('Valor deve ser numérico')
@@ -144,7 +152,7 @@ const validateLogin = [
 ];
 
 /**
- * Validação para registro
+ * Validação para registo
  */
 const validateRegister = [
   body('nome')
@@ -158,6 +166,30 @@ const validateRegister = [
   body('password')
     .notEmpty().withMessage('Senha é obrigatória')
     .isLength({ min: 6 }).withMessage('Senha deve ter no mínimo 6 caracteres'),
+];
+
+/**
+ * Validação para criação de orçamento
+ */
+const validateOrcamento = [
+  body('area')
+    .notEmpty().withMessage('Área é obrigatória'),
+  body('categoria')
+    .notEmpty().withMessage('Categoria é obrigatória'),
+  body('valorPlanejado')
+    .notEmpty().withMessage('Valor planejado é obrigatório')
+    .isNumeric().withMessage('Valor deve ser numérico')
+    .custom(val => val > 0).withMessage('Valor deve ser positivo'),
+  body('tipo')
+    .notEmpty().withMessage('Tipo é obrigatório')
+    .isIn(['mensal', 'semanal']).withMessage('Tipo deve ser mensal ou semanal'),
+  body('ano')
+    .notEmpty().withMessage('Ano é obrigatório')
+    .isInt({ min: 2020, max: 2100 }).withMessage('Ano inválido'),
+  body('descricao')
+    .optional()
+    .trim()
+    .isLength({ max: 500 }).withMessage('Descrição muito longa (máx 500 caracteres)'),
 ];
 
 /**
@@ -260,6 +292,7 @@ module.exports = {
   // Validadores
   validateGasto,
   validateEntrada,
+  validateOrcamento,
   validateArea,
   validateCategoria,
   validateLogin,

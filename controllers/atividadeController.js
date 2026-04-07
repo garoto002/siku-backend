@@ -367,11 +367,93 @@ const obterEstatisticas = async (req, res) => {
   }
 };
 
+// Copiar atividades para o próximo dia
+const copiarAtividadesParaAmanha = async (req, res) => {
+  try {
+    const { data } = req.params; // Data no formato YYYY-MM-DD
+
+    console.log('📋 Copiando atividades da data:', data);
+
+    // Validar formato da data
+    const dataOrigem = new Date(data);
+    if (isNaN(dataOrigem.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: 'Formato de data inválido. Use YYYY-MM-DD'
+      });
+    }
+
+    // Calcular data do próximo dia
+    const dataDestino = new Date(dataOrigem);
+    dataDestino.setDate(dataDestino.getDate() + 1);
+
+    console.log('📅 Data destino:', dataDestino.toISOString().split('T')[0]);
+
+    // Buscar atividades da data origem
+    const atividadesOrigem = await Atividade.find({
+      usuario: req.usuario.id,
+      data: {
+        $gte: new Date(dataOrigem.setHours(0, 0, 0, 0)),
+        $lt: new Date(dataOrigem.setHours(23, 59, 59, 999))
+      }
+    });
+
+    console.log('📋 Atividades encontradas:', atividadesOrigem.length);
+
+    if (atividadesOrigem.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Nenhuma atividade encontrada para copiar'
+      });
+    }
+
+    // Criar cópias das atividades para o próximo dia
+    const atividadesCopiadas = [];
+    for (const atividade of atividadesOrigem) {
+      const novaAtividade = new Atividade({
+        titulo: atividade.titulo,
+        descricao: atividade.descricao,
+        data: dataDestino,
+        horaInicio: atividade.horaInicio,
+        horaFim: atividade.horaFim,
+        prioridade: atividade.prioridade,
+        categoria: atividade.categoria,
+        lembretes: atividade.lembretes,
+        usuario: req.usuario.id,
+        status: 'pendente' // Resetar status para pendente
+      });
+
+      await novaAtividade.save();
+      atividadesCopiadas.push(novaAtividade);
+    }
+
+    console.log('✅ Atividades copiadas com sucesso:', atividadesCopiadas.length);
+
+    res.status(201).json({
+      success: true,
+      message: `${atividadesCopiadas.length} atividade(s) copiada(s) para ${dataDestino.toLocaleDateString('pt-BR')}`,
+      data: {
+        atividadesCopiadas,
+        dataDestino: dataDestino.toISOString().split('T')[0]
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Erro ao copiar atividades:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro ao copiar atividades',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   criarAtividade,
   listarAtividades,
   buscarAtividade,
   atualizarAtividade,
   excluirAtividade,
-  obterEstatisticas
+  obterEstatisticas,
+  copiarAtividadesParaAmanha
 };

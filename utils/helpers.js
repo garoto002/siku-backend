@@ -38,6 +38,7 @@ const allowedFields = {
   projeto: ['nome', 'descricao', 'dataInicio', 'dataFim', 'status', 'cor'],
   area: ['nome', 'cor', 'icone'],
   categoria: ['nome', 'cor', 'area'],
+  orcamento: ['titulo', 'descricao', 'tipo', 'mes', 'ano', 'semana', 'area', 'categoria', 'valorPlanejado'],
   // habito foi removido - agora tudo é gasto
   habito: ['titulo', 'descricao', 'data', 'hora', 'prioridade', 'status', 'area', 'categoria', 'valor'] // Igual a gasto
 };

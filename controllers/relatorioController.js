@@ -31,8 +31,6 @@ exports.exportarCSV = async (req, res) => {
     // Buscar dados conforme tipo
     if (tipo === 'gastos' || tipo === 'todos') {
       const gastos = await Gasto.find(filtroData)
-        .populate('area', 'nome')
-        .populate('categoria', 'nome')
         .sort({ data: -1 });
       
       gastos.forEach(g => {
@@ -40,8 +38,8 @@ exports.exportarCSV = async (req, res) => {
           tipo: 'Gasto',
           data: g.data?.toISOString().split('T')[0] || '',
           descricao: g.descricao || g.titulo || '',
-          area: g.area?.nome || '',
-          categoria: g.categoria?.nome || '',
+          area: g.area || '',
+          categoria: g.categoria || '',
           valor: -Math.abs(g.valor) // Gastos são negativos
         });
       });
@@ -49,8 +47,6 @@ exports.exportarCSV = async (req, res) => {
 
     if (tipo === 'entradas' || tipo === 'todos') {
       const entradas = await Entrada.find(filtroData)
-        .populate('area', 'nome')
-        .populate('categoria', 'nome')
         .sort({ data: -1 });
       
       entradas.forEach(e => {
@@ -58,8 +54,8 @@ exports.exportarCSV = async (req, res) => {
           tipo: 'Entrada',
           data: e.data?.toISOString().split('T')[0] || '',
           descricao: e.descricao || e.titulo || '',
-          area: e.area?.nome || '',
-          categoria: e.categoria?.nome || '',
+          area: e.area || '',
+          categoria: e.categoria || '',
           valor: Math.abs(e.valor) // Entradas são positivas
         });
       });
@@ -133,8 +129,8 @@ exports.exportarRelatorio = async (req, res) => {
 
     // Buscar todos os dados
     const [gastos, entradas, areas, categorias] = await Promise.all([
-      Gasto.find(filtroData).populate('area categoria').sort({ data: -1 }),
-      Entrada.find(filtroData).populate('area categoria').sort({ data: -1 }),
+      Gasto.find(filtroData).sort({ data: -1 }),
+      Entrada.find(filtroData).sort({ data: -1 }),
       Area.find({ usuario: usuarioId }),
       Categoria.find({ usuario: usuarioId })
     ]);
@@ -147,7 +143,7 @@ exports.exportarRelatorio = async (req, res) => {
     // Agrupar gastos por área
     const gastosPorArea = {};
     gastos.forEach(g => {
-      const areaNome = g.area?.nome || 'Sem área';
+      const areaNome = g.area || 'Sem área';
       if (!gastosPorArea[areaNome]) {
         gastosPorArea[areaNome] = { total: 0, count: 0, items: [] };
       }
@@ -156,7 +152,7 @@ exports.exportarRelatorio = async (req, res) => {
       gastosPorArea[areaNome].items.push({
         data: g.data,
         descricao: g.descricao || g.titulo,
-        categoria: g.categoria?.nome,
+        categoria: g.categoria,
         valor: g.valor
       });
     });
@@ -164,7 +160,7 @@ exports.exportarRelatorio = async (req, res) => {
     // Agrupar entradas por área
     const entradasPorArea = {};
     entradas.forEach(e => {
-      const areaNome = e.area?.nome || 'Sem área';
+      const areaNome = e.area || 'Sem área';
       if (!entradasPorArea[areaNome]) {
         entradasPorArea[areaNome] = { total: 0, count: 0, items: [] };
       }
@@ -173,7 +169,7 @@ exports.exportarRelatorio = async (req, res) => {
       entradasPorArea[areaNome].items.push({
         data: e.data,
         descricao: e.descricao || e.titulo,
-        categoria: e.categoria?.nome,
+        categoria: e.categoria,
         valor: e.valor
       });
     });
@@ -181,7 +177,7 @@ exports.exportarRelatorio = async (req, res) => {
     // Gastos por categoria (top 10)
     const gastosPorCategoria = {};
     gastos.forEach(g => {
-      const catNome = g.categoria?.nome || 'Sem categoria';
+      const catNome = g.categoria || 'Sem categoria';
       gastosPorCategoria[catNome] = (gastosPorCategoria[catNome] || 0) + (g.valor || 0);
     });
     const topCategorias = Object.entries(gastosPorCategoria)
@@ -210,15 +206,15 @@ exports.exportarRelatorio = async (req, res) => {
         gastos: gastos.map(g => ({
           data: g.data,
           descricao: g.descricao || g.titulo,
-          area: g.area?.nome,
-          categoria: g.categoria?.nome,
+          area: g.area,
+          categoria: g.categoria,
           valor: g.valor
         })),
         entradas: entradas.map(e => ({
           data: e.data,
           descricao: e.descricao || e.titulo,
-          area: e.area?.nome,
-          categoria: e.categoria?.nome,
+          area: e.area,
+          categoria: e.categoria,
           valor: e.valor
         }))
       }
@@ -255,11 +251,11 @@ exports.resumoFinanceiro = async (req, res) => {
 
     const [gastos, entradas] = await Promise.all([
       Gasto.aggregate([
-        { $match: { ...filtro, usuario: require('mongoose').Types.ObjectId.createFromHexString(usuarioId) } },
+        { $match: { usuario: new (require('mongoose').Types.ObjectId)(usuarioId), data: { $gte: dataInicio, $lte: dataFim } } },
         { $group: { _id: null, total: { $sum: '$valor' }, count: { $sum: 1 } } }
       ]),
       Entrada.aggregate([
-        { $match: { ...filtro, usuario: require('mongoose').Types.ObjectId.createFromHexString(usuarioId) } },
+        { $match: { usuario: new (require('mongoose').Types.ObjectId)(usuarioId), data: { $gte: dataInicio, $lte: dataFim } } },
         { $group: { _id: null, total: { $sum: '$valor' }, count: { $sum: 1 } } }
       ])
     ]);

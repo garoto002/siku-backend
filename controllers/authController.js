@@ -8,7 +8,7 @@ const gerarToken = (id) => {
   });
 };
 
-// Registrar usuário
+// Registar usuário
 const registrarUsuario = async (req, res) => {
   try {
     const { username: nome, email, password: senha } = req.body;
@@ -50,7 +50,7 @@ const registrarUsuario = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Erro no registro:', error);
+    console.error('❌ Erro no registo:', error);
     
     // Tratamento de erros de validação do Mongoose
     if (error.name === 'ValidationError') {
@@ -64,7 +64,7 @@ const registrarUsuario = async (req, res) => {
     
     return res.status(500).json({
       success: false,
-      message: 'Erro ao registrar usuário',
+      message: 'Erro ao registar usuário',
       error: error.message
     });
   }
@@ -186,50 +186,71 @@ const solicitarRecuperacaoSenha = async (req, res) => {
     usuario.resetPasswordExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutos
     await usuario.save();
 
-    // Enviar email com o código
-    const nodemailer = require('nodemailer');
-    
-    // Configurar transporter (usar variáveis de ambiente)
-    const transporter = nodemailer.createTransport({
-      service: process.env.EMAIL_SERVICE || 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
-    });
+    // Se as credenciais de email não estiverem configuradas, devolver o código directamente
+    const emailConfigurado = !!(process.env.EMAIL_USER && process.env.EMAIL_PASS);
 
-    const mailOptions = {
-      from: `"SIKU App" <${process.env.EMAIL_USER}>`,
-      to: usuario.email,
-      subject: 'Recuperação de Senha - SIKU',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background: linear-gradient(135deg, #10B981, #059669); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-            <h1 style="color: white; margin: 0;">SIKU</h1>
-            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0;">Recuperação de Senha</p>
-          </div>
-          <div style="background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px;">
-            <p style="color: #374151; font-size: 16px;">Olá <strong>${usuario.nome}</strong>,</p>
-            <p style="color: #6b7280; font-size: 14px;">Você solicitou a recuperação da sua senha. Use o código abaixo para criar uma nova senha:</p>
-            <div style="background: #10B981; color: white; font-size: 32px; font-weight: bold; text-align: center; padding: 20px; border-radius: 10px; letter-spacing: 8px; margin: 20px 0;">
-              ${resetCode}
+    if (!emailConfigurado) {
+      console.log(`⚠️  Email não configurado. Código de recuperação para ${usuario.email}: ${resetCode}`);
+      return res.status(200).json({
+        success: true,
+        message: 'Código gerado com sucesso.',
+        // Código devolvido directamente quando email não está configurado
+        codigo: resetCode,
+        semEmail: true
+      });
+    }
+
+    // Tentar enviar email
+    try {
+      const nodemailer = require('nodemailer');
+      const transporter = nodemailer.createTransport({
+        service: process.env.EMAIL_SERVICE || 'gmail',
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS
+        }
+      });
+
+      const mailOptions = {
+        from: `"SIKU App" <${process.env.EMAIL_USER}>`,
+        to: usuario.email,
+        subject: 'Recuperação de Senha - SIKU',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #10B981, #059669); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+              <h1 style="color: white; margin: 0;">SIKU</h1>
+              <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0;">Recuperação de Senha</p>
             </div>
-            <p style="color: #6b7280; font-size: 14px;">Este código expira em <strong>15 minutos</strong>.</p>
-            <p style="color: #ef4444; font-size: 12px;">Se você não solicitou esta recuperação, ignore este email.</p>
-            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
-            <p style="color: #9ca3af; font-size: 12px; text-align: center;">SIKU - O progresso acontece um dia de cada vez</p>
+            <div style="background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px;">
+              <p style="color: #374151; font-size: 16px;">Olá <strong>${usuario.nome}</strong>,</p>
+              <p style="color: #6b7280; font-size: 14px;">Use o código abaixo para criar uma nova senha:</p>
+              <div style="background: #10B981; color: white; font-size: 32px; font-weight: bold; text-align: center; padding: 20px; border-radius: 10px; letter-spacing: 8px; margin: 20px 0;">
+                ${resetCode}
+              </div>
+              <p style="color: #6b7280; font-size: 14px;">Este código expira em <strong>15 minutos</strong>.</p>
+              <p style="color: #ef4444; font-size: 12px;">Se não solicitou esta recuperação, ignore este email.</p>
+            </div>
           </div>
-        </div>
-      `
-    };
+        `
+      };
 
-    await transporter.sendMail(mailOptions);
-    console.log(`✅ Email de recuperação enviado para: ${usuario.email}`);
+      await transporter.sendMail(mailOptions);
+      console.log(`✅ Email de recuperação enviado para: ${usuario.email}`);
 
-    return res.status(200).json({
-      success: true,
-      message: 'Código de recuperação enviado para o seu email.'
-    });
+      return res.status(200).json({
+        success: true,
+        message: 'Código de recuperação enviado para o seu email.'
+      });
+    } catch (emailError) {
+      // Email falhou mas o código já está guardado — devolver o código directamente
+      console.error('❌ Falha ao enviar email, devolvendo código directamente:', emailError.message);
+      return res.status(200).json({
+        success: true,
+        message: 'Não foi possível enviar o email. Use o código abaixo:',
+        codigo: resetCode,
+        semEmail: true
+      });
+    }
 
   } catch (error) {
     console.error('❌ Erro ao solicitar recuperação:', error);

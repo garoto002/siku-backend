@@ -58,7 +58,7 @@ app.use('/api/areas', areaRoutes);
 const categoriaRoutes = require('./routes/categoriaRoutes');
 app.use('/api/categorias', categoriaRoutes);
 
-// Rotas de projetos
+// Rotas de projectos
 const projetoRoutes = require('./routes/projetoRoutes');
 app.use('/api/projetos', projetoRoutes);
 
@@ -78,6 +78,18 @@ app.use('/api/alerts', alertRoutes);
 // Rotas de insights (IA)
 const insightsRoutes = require('./routes/insightsRoutes');
 app.use('/api/insights', insightsRoutes);
+
+// Rotas de livros
+const livroRoutes = require('./routes/livroRoutes');
+app.use('/api/livros', livroRoutes);
+
+// Rotas de orçamentos
+const orcamentoRoutes = require('./routes/orcamentoRoutes');
+app.use('/api/orcamentos', orcamentoRoutes);
+
+// Rotas de exercícios físicos
+const exercicioRoutes = require('./routes/exercicioRoutes');
+app.use('/api/exercicios', exercicioRoutes);
 
 // Rotas de relatórios (exportação CSV/PDF)
 const relatorioRoutes = require('./routes/relatorioRoutes');
@@ -100,6 +112,9 @@ app.get('/', (req, res) => {
       metas: '/api/metas',
       insights: '/api/insights',
       relatorios: '/api/relatorios',
+      livros: '/api/livros',
+      orcamentos: '/api/orcamentos',
+      exercicios: '/api/exercicios',
       health: '/ping',
       entradas: '/api/entradas'
     }

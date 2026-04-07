@@ -25,13 +25,13 @@ exports.obterProjeto = async (req, res) => {
   }
 };
 
-// Listar todos os projetos do usuário
+// Listar todos os projectos do usuário
 exports.listarProjetos = async (req, res) => {
   try {
     const projetos = await Projeto.find({ usuario: req.usuario.id }).sort({ createdAt: -1 });
     res.status(200).json({ success: true, data: projetos });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Erro ao listar projetos', error: error.message });
+    res.status(500).json({ success: false, message: 'Erro ao listar projectos', error: error.message });
   }
 };
 

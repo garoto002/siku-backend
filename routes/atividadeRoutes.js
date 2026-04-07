@@ -5,7 +5,8 @@ const {
   buscarAtividade,
   atualizarAtividade,
   excluirAtividade,
-  obterEstatisticas
+  obterEstatisticas,
+  copiarAtividadesParaAmanha
 } = require('../controllers/atividadeController');
 const { protegerRota } = require('../middleware/authMiddleware');
 
@@ -21,5 +22,6 @@ router.get('/stats', obterEstatisticas);
 router.get('/:id', buscarAtividade);
 router.put('/:id', atualizarAtividade);
 router.delete('/:id', excluirAtividade);
+router.post('/copy-to-next-day/:data', copiarAtividadesParaAmanha);
 
 module.exports = router;

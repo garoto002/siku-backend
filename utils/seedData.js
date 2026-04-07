@@ -40,7 +40,7 @@ const dadosIniciais = {
       categorias: [
         { nome: 'Economia', cor: '#7C3AED' },
         { nome: 'Investimentos', cor: '#6D28D9' },
-        { nome: 'Planejamento', cor: '#5B21B6' },
+        { nome: 'Planeamento', cor: '#5B21B6' },
         { nome: 'Controle de Gastos', cor: '#4C1D95' }
       ]
     },
@@ -49,7 +49,7 @@ const dadosIniciais = {
       cor: '#EF4444', // Vermelho
       categorias: [
         { nome: 'Habilidades', cor: '#DC2626' },
-        { nome: 'Leitura', cor: '#B91C1C' },
+        { nome: 'Leitura', cor: '#10B981' }, // Verde
         { nome: 'Criatividade', cor: '#991B1B' },
         { nome: 'Autoconhecimento', cor: '#7F1D1D' }
       ]
@@ -61,7 +61,7 @@ const dadosIniciais = {
         { nome: 'Organização', cor: '#0891B2' },
         { nome: 'Manutenção', cor: '#0E7490' },
         { nome: 'Culinária', cor: '#155E75' },
-        { nome: 'Atividades Familiares', cor: '#164E63' }
+        { nome: 'Actividades Familiares', cor: '#164E63' }
       ]
     },
     {

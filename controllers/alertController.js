@@ -139,7 +139,7 @@ const detectAlerts_legacy = async (req, res) => {
   }
 };
 
-// Registrar push token
+// Registar push token
 const registerPushToken = async (req, res) => {
   try {
     const usuarioId = req.usuario?.id || (req.usuario?._id && req.usuario._id.toString());
@@ -148,8 +148,8 @@ const registerPushToken = async (req, res) => {
     const user = await User.findByIdAndUpdate(usuarioId, { expoPushToken: token }, { new: true });
     return res.json({ success: true, data: user });
   } catch (error) {
-    console.error('Erro ao registrar push token:', error);
-    res.status(500).json({ success: false, message: 'Erro ao registrar token' });
+    console.error('Erro ao registar push token:', error);
+    res.status(500).json({ success: false, message: 'Erro ao registar token' });
   }
 };
 
@@ -285,7 +285,7 @@ const detectAlertsForUser = async (userId, opts = {}) => {
       const metas = await Meta.find({ usuario: userId, status: { $ne: 'concluida' }, dataInicio: { $lte: in7.toISOString().split('T')[0] } });
       for (const m of metas) {
         const title = 'Lembrete de meta';
-        const message = `Meta "${m.titulo}" inicia em ${m.dataInicio}. Lembre-se de planejar e executar.`;
+        const message = `Meta "${m.titulo}" inicia em ${m.dataInicio}. Lembre-se de planear e executar.`;
         await createAndNotify(userId, 'goal_reminder', title, message, { metaId: m._id });
       }
     } catch (e) { console.error('Erro ao detectar metas:', e); }

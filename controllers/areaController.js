@@ -168,7 +168,7 @@ const excluirArea = async (req, res) => {
       });
     }
 
-    await area.remove();
+    await area.deleteOne();
 
     res.status(200).json({
       success: true,

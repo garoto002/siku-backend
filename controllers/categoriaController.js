@@ -209,7 +209,7 @@ const excluirCategoria = async (req, res) => {
       });
     }
 
-    await categoria.remove();
+    await categoria.deleteOne();
 
     res.status(200).json({
       success: true,

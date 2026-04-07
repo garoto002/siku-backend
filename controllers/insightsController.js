@@ -200,7 +200,7 @@ const getInsightsFinanceiros = async (req, res) => {
         tipo: 'info',
         icone: 'calendar',
         titulo: 'Padrão de Gastos',
-        descricao: `Você tende a gastar mais na ${diaMaisGastos}. Planeje melhor esses dias.`,
+        descricao: `Você tende a gastar mais na ${diaMaisGastos}. Planeie melhor esses dias.`,
         valor: gastosPorDiaSemana[0]?.total || 0,
         prioridade: 'baixa'
       });
@@ -516,21 +516,6 @@ const getInsightsMetas = async (req, res) => {
       });
     }
 
-    res.json({
-      success: true,
-      resumo: {
-        total,
-        concluidas,
-        emAndamento,
-        pendentes,
-        atrasadas,
-        taxaConclusao,
-        proximasSemana: proximasSemana.length
-      },
-      insights,
-      geradoEm: new Date()
-    });
-
     // Gerar análise com IA
     let analiseIA = null;
     try {
@@ -659,7 +644,7 @@ const getTodosInsights = async (req, res) => {
         '💡 Revise seus gastos semanalmente para manter o controle.',
         '🎯 Defina metas SMART: Específicas, Mensuráveis, Alcançáveis, Relevantes e Temporais.',
         '🏦 Tente automatizar suas poupanças definindo uma transferência automática.',
-        '📋 Divida grandes projetos em tarefas menores e mais gerenciáveis.',
+        '📋 Divida grandes projectos em tarefas menores e mais gerenciáveis.',
         '🎉 Celebre pequenas vitórias para manter a motivação.',
         '⏰ Reserve 10 minutos por dia para revisar seu progresso.',
         '📊 Priorize tarefas usando a matriz de Eisenhower.',
@@ -747,7 +732,7 @@ const chatIA = async (req, res) => {
       atividadesData,
       // Todas as metas
       metasData,
-      // Todos os projetos
+      // Todos os projectos
       projetosData
     ] = await Promise.all([
       // Gastos agregados do mês
@@ -784,7 +769,7 @@ const chatIA = async (req, res) => {
       // Todas as metas do utilizador
       Meta.find({ usuario: userId })
         .select('titulo descricao valorAlvo valorAtual status dataLimite'),
-      // Todos os projetos do utilizador
+      // Todos os projectos do utilizador
       Projeto.find({ usuario: userId })
         .select('titulo descricao cumprido dataProjecto')
     ]);
@@ -819,7 +804,7 @@ const chatIA = async (req, res) => {
       metasEmAndamento: metasData.filter(m => m.status === 'em_andamento').length,
       metasLista: metasData,
       
-      // Projetos
+      // Projectos
       projetosTotal: projetosData.length,
       projetosCumpridos: projetosData.filter(p => p.cumprido).length,
       projetosPendentes: projetosData.filter(p => !p.cumprido).length,
